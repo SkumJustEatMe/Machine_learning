@@ -49,28 +49,30 @@ df["price"] = pd.to_numeric(df["price"], errors='coerce')
 df = df.drop(columns=["prices"])
 # print(f"\nPrice: {df['price'].apply(type).unique()}")
 # print(df["price"].unique())
-print(df.head(3))
+df = df.head(8)
+print(df)
+
+print(df.mean())
 
 means = df.mean()
-# print(df.dtypes)
-# print(f"\nMeans:\n{means}")
 df2 = df[means.index] - means
-print(df2.head(3))
-# print(f"\nHead 1: \n{df2.head(1)}")
+print(df2)
 
-U, S, V = svd(df2, full_matrices=False)
-rho = (S * S) / (S * S).sum()
+#SSD = Sum of squared distances.
+print(f"Sum of Squared Distances for Adjusted Power: {(df2['power']**2).sum()}")
+print(f"Sum of Squared Distances for Adjusted Price: {(df2['price']**2).sum()}")
 
-threshold = 0.9
+# Singular value decomposition
 
-# Plot variance explained
-plt.figure()
-plt.plot(range(1, len(rho) + 1), rho, "x-")
-plt.plot(range(1, len(rho) + 1), np.cumsum(rho), "o-")
-plt.plot([1, len(rho)], [threshold, threshold], "k--")
-plt.title("Variance explained by principal components")
-plt.xlabel("Principal component")
-plt.ylabel("Variance explained")
-plt.legend(["Individual", "Cumulative", "Threshold"])
-plt.grid()
+# Create a 3D scatter plot
+plt.figure(figsize=(8, 6))
+plt.scatter(df2["power"], df2["price"], color='r', s=100)
+
+# Labels and title
+plt.xlabel('Power')
+plt.ylabel('Price')
+plt.title('2D Scatter Plot of Price vs. Power')
+
+# Show the plot
+plt.grid(True)
 plt.show()
