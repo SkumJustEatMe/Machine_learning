@@ -13,6 +13,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 1000)
 pd.set_option('display.colheader_justify', 'center')
 pd.set_option('display.precision', 2)
+
     
 def load_data_to_list(file):
     with open(file, 'r') as file:
@@ -114,13 +115,12 @@ num_components = 4  # Plot the first four PCs
 x = np.arange(len(feature_names))  # x locations for the groups
 bar_width = 0.2  # Width of the bars
 
-plt.figure(figsize=(12, 6))
+# plt.figure(figsize=(12, 6))
 
 # Create grouped bars for the first 4 PCs
 for i in range(num_components):
     plt.bar(x + i * bar_width, V[:, i], bar_width, label=f'PC{i+1}')
 
-# Add labels and formatting
 # plt.title('PCA Component Coefficient Plot (First Four Principal Components)')
 # plt.xlabel('Features (Attributes)')
 # plt.ylabel('Component Coefficients')
@@ -130,14 +130,15 @@ for i in range(num_components):
 # plt.tight_layout()  # Adjust layout to avoid label cutoff
 # plt.show()
 
-# Assuming your DataFrame is called 'your_dataframe'
-# Boxplot of the entire DataFrame
-plt.figure(figsize=(10, 6))  # Adjust figure size as needed
-df2.boxplot()
-plt.title('Boxplot of Original DataFrame')
-plt.xlabel('Features (Attributes)')
-plt.ylabel('Values')
-plt.xticks(rotation=90)  # Rotate labels if feature names are long
-plt.grid(True)
-plt.tight_layout()  # Adjust layout to avoid label cutoff
-plt.show()
+
+# plt.figure(figsize=(10, 6))  # Adjust figure size as needed
+# df2.boxplot()
+# plt.title('Boxplot of Original DataFrame')
+# plt.xlabel('Features (Attributes)')
+# plt.ylabel('Values')
+# plt.xticks(rotation=90)  # Rotate labels if feature names are long
+# plt.grid(True)
+# plt.tight_layout()  # Adjust layout to avoid label cutoff
+# plt.show()
+print(df.describe())
+# df.describe().to_csv('df_summary.csv', index=False) 
