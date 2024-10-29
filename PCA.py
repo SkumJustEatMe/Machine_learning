@@ -66,8 +66,8 @@ df = make_data_ready()
 
 # print(df.describe())
 
-scaler = StandardScaler()
-df[['power', 'toughness', 'price']] = scaler.fit_transform(df[['power', 'toughness', 'price']])
+# scaler = StandardScaler()
+# df[['power', 'toughness', 'price']] = scaler.fit_transform(df[['power', 'toughness', 'price']])
 
 X = df[['power', 'toughness', 'price']]
 y = df['rarity']
@@ -78,7 +78,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 LR = LogisticRegression()
 # Initialize classification tree
 clf = DecisionTreeClassifier(max_depth=5, random_state=42)
-# Initialize K 
+# Initialize KNN k-nearest neighbor
 k = 3
 knn = KNeighborsClassifier(n_neighbors=k)
 
@@ -88,22 +88,14 @@ clf.fit(X_train, y_train)
 knn.fit(X_train, y_train)
 
 # Make predictions on the test set
-y_pred = LR.predict(X_test)
-y_pred = clf.predict(X_test)
+LR_y_pred = LR.predict(X_test)
+clf_y_pred = clf.predict(X_test)
+knn_y_pred = knn.predict(X_test)
 
 # Evaluate the model
-print(classification_report(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-sns.countplot(x='rarity', data=df)
-plt.title('Distribution of Card Rarity')
-plt.show()
-
-correlation_matrix = df[['power', 'toughness', 'price', 'rarity']].corr()
-sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
-plt.title('Feature Correlation')
-plt.show()
+print(classification_report(y_test, LR_y_pred))
+print(classification_report(y_test, clf_y_pred))
+print(classification_report(y_test, knn_y_pred))
 
 
 
