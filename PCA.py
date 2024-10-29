@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report
 
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
@@ -78,24 +79,31 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 LR = LogisticRegression()
 # Initialize classification tree
 clf = DecisionTreeClassifier(max_depth=5, random_state=42)
-# Initialize KNN k-nearest neighbor
-k = 3
-knn = KNeighborsClassifier(n_neighbors=k)
+# Initialize baseline model (Dummy Classifier predicting the majority class)
+baseline_model = DummyClassifier(strategy='most_frequent')
 
 # Fit the model on the training data
 LR.fit(X_train, y_train)
 clf.fit(X_train, y_train)
-knn.fit(X_train, y_train)
+baseline_model.fit(X_train, y_train)
 
 # Make predictions on the test set
 LR_y_pred = LR.predict(X_test)
 clf_y_pred = clf.predict(X_test)
-knn_y_pred = knn.predict(X_test)
+baseline_y_pred = baseline_model.predict(X_test)
 
-# Evaluate the model
+# Evaluate the models
+print("Logistic Regression Classification Report:")
 print(classification_report(y_test, LR_y_pred))
+
+print("Decision Tree Classification Report:")
 print(classification_report(y_test, clf_y_pred))
-print(classification_report(y_test, knn_y_pred))
+
+print("Baseline Model (Majority Class) Classification Report:")
+print(classification_report(y_test, baseline_y_pred, zero_division=0))
+
+
+
 
 
 
