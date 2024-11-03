@@ -45,6 +45,7 @@ y = df['rarity'].values
 
 # Two-level cross-validation
 k_values = [1, 2, 5, 8, 10]  
+C_values = [0.001, 0.01, 0.1, 1, 10] 
 K1 = 10 # Outer cross-validation folds
 K2 = 10  # Inner cross-validation folds
 
@@ -78,7 +79,8 @@ for i, (outer_train_idx, outer_test_idx) in enumerate(outer_kfold.split(X), 1): 
     inner_kfold = KFold(n_splits=K2, shuffle=True, random_state=42)
     
     # To store validation errors for each model with different k
-    model_validation_errors = {k: [] for k in k_values}
+    knn_validation_errors = {k: [] for k in k_values}
+    lr_validation_errors = {c: [] for c in C_values}
     
     for inner_train_idx, inner_val_idx in inner_kfold.split(X_outer_train):
         X_inner_train, X_inner_val = X_outer_train[inner_train_idx], X_outer_train[inner_val_idx]
@@ -92,31 +94,68 @@ for i, (outer_train_idx, outer_test_idx) in enumerate(outer_kfold.split(X), 1): 
 
             # use model to predict y based on X_inner_val
             val_predictions = model.predict(X_inner_val)
-
             # calc loss
             val_accuracy = accuracy_score(y_inner_val, val_predictions)
             val_loss = 1 - val_accuracy
-            model_validation_errors[k].append(val_loss)
+            knn_validation_errors[k].append(val_loss)
+
+        for c in C_values:
+            model = LogisticRegression(C=c, max_iter=1000)
+            model.fit(X_inner_train, y_inner_train)
+            val_predictions = model.predict(X_inner_val)
+            val_accuracy = accuracy_score(y_inner_val, val_predictions)
+            val_loss = 1 - val_accuracy
+            lr_validation_errors[c].append(val_loss)
     
     # Compute average validation error for each h
-    avg_validation_errors = {k: np.mean(model_validation_errors[k]) for k in k_values}
+    #avg_validation_errors = {k: np.mean(knn_validation_errors[k]) for k in k_values}
+    avg_knn_errors = {k: np.mean(knn_validation_errors[k]) for k in k_values}
+    avg_lr_errors = {c: np.mean(lr_validation_errors[c]) for c in C_values}
     
     # Select the best model (with lowest validation error)
-    best_k = min(avg_validation_errors, key=avg_validation_errors.get)
+    best_k = min(avg_knn_errors, key=avg_knn_errors.get)
+    best_c = min(avg_lr_errors, key=avg_lr_errors.get)
+
     print(f"Best k in this outer fold {i}: {best_k}")
+    print(f"Best C in this outer fold {i}: {best_c}")
+
+    # # Train the best model on the entire outer training set
+    # best_model = KNeighborsClassifier(best_k)
+    # best_model.fit(X_outer_train, y_outer_train)
     
+    # Train the best KNN model on the entire outer training set
+    best_knn_model = KNeighborsClassifier(best_k)
+    best_knn_model.fit(X_outer_train, y_outer_train)
 
-    # Train the best model on the entire outer training set
-    best_model = KNeighborsClassifier(best_k)
-    best_model.fit(X_outer_train, y_outer_train)
+    # Train the best Logistic Regression model on the entire outer training set
+    best_lr_model = LogisticRegression(C=best_c, max_iter=1000)
+    best_lr_model.fit(X_outer_train, y_outer_train)
+    knn_test_predictions = best_knn_model.predict(X_outer_test)
+    knn_test_accuracy = accuracy_score(y_outer_test, knn_test_predictions)
+    knn_test_loss = 1 - knn_test_accuracy
+    print(f"KNN Test loss in this outer fold {i}: {knn_test_loss}")
 
-    # use model to predict y based on X_outer_val
-    val_predictions = model.predict(X_outer_test)
-    val_accuracy = accuracy_score(y_outer_test, val_predictions)
-    val_loss = 1 - val_accuracy
-    generalization_errors.append(val_loss)
+    # Evaluate the best Logistic Regression model on the outer test set
+    lr_test_predictions = best_lr_model.predict(X_outer_test)
+    lr_test_accuracy = accuracy_score(y_outer_test, lr_test_predictions)
+    lr_test_loss = 1 - lr_test_accuracy
+    print(f"Logistic Regression Test loss in this outer fold {i}: {lr_test_loss}")
+
+    # # use model to predict y based on X_outer_val
+    # val_predictions = model.predict(X_outer_test)
+    # val_accuracy = accuracy_score(y_outer_test, val_predictions)
+    # val_loss = 1 - val_accuracy
+    # generalization_errors.append(val_loss)
     
     print(f"Test loss in this outer fold {i}: {val_loss}")
     
-#     # Store the results for the table
-#     results_table.append([i, best_h, test_loss, baseline_loss])
+    # Store the results for the table
+    results_table.append([i, best_k, best_c, knn_test_loss,lr_test_loss, baseline_loss])
+
+# Display results in a table
+results_df = pd.DataFrame(results_table, columns=["Outer Fold", "Best k", "Best lambda", "E_test (KNN)", "E_test (Logistic regression)", "E_test (baseline_loss)"])
+print("\nResults Table:\n")
+print(results_df)
+
+# Optionally save the results to a CSV file
+results_df.to_csv('results_table_classification.csv', index=False)
