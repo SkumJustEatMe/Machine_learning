@@ -167,11 +167,14 @@ print(results_df)
 
 results_df.to_csv('results_table.csv', index=False)
 
+
+# TODO : Update ttest part to match Method 11.3.4
 ## statistical analysis 
 # Extract generalization error columns
 e_test_nn = results_df['E_test (Neural Net)']
 e_test_baseline = results_df['E_test (Baseline)']
 e_test_ridge = results_df['E_test (Ridge)']
+
 
 # Perform paired t-tests
 t_nn_baseline, p_nn_baseline = ttest_rel(e_test_nn, e_test_baseline)
