@@ -28,7 +28,7 @@ def make_data_ready():
     df = pd.read_csv("Golden_list.csv")
 
     df = df[["name", "legalities", "power", "toughness", "prices", "rarity", "set_id", "artist", "color_identity", "released_at", "keywords", "full_art"]]
-    df = df.head(10000)
+    df = df.head(1000)
     df = df[["power", "toughness", "rarity", "prices"]]
     df["power"] = df["power"].replace('*', np.nan)
     df["power"] = df["power"].replace('1+*', np.nan)

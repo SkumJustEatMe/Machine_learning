@@ -1,3 +1,5 @@
+from PCA import df
+
 import pandas as pd
 import warnings
 import csv
@@ -21,29 +23,8 @@ from scipy.stats import beta
 
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
 
-df = pd.read_csv("Golden_list.csv")
-df = df[["name", "legalities", "power", "toughness", "prices", "rarity", "set_id", "artist", "color_identity", "released_at", "keywords", "full_art"]]
-df = df.head(1000)
-df = df[["power", "toughness", "rarity", "prices"]]
-df["power"] = df["power"].replace('*', np.nan)
-df["power"] = df["power"].replace('1+*', np.nan)
-df = df.dropna()
-
-df[["power"]] = df[["power"]].astype(float)
-df[["toughness"]] = df[["toughness"]].astype(float)
-
-df["rarity"] = df["rarity"].replace({'uncommon': 1, 'common': 2, 'rare': 3, 'mythic': 4})
-df["price"] = df["prices"].apply(lambda x: ast.literal_eval(x).get('eur'))
-df["price"] = pd.to_numeric(df["price"], errors='coerce')
-df = df.drop(columns=["prices"])
-df = df.dropna(subset=["price"])  
-
-
 X = df[['power', 'toughness', 'price']].values
 y = df['rarity'].values
-
-#print(X)
-#print(y)
 
 # Two-level cross-validation
 k_values = [1, 2, 5, 8, 10]  
@@ -136,42 +117,35 @@ for i, (outer_train_idx, outer_test_idx) in enumerate(outer_kfold.split(X), 1): 
             val_loss = 1 - val_accuracy
             lr_validation_errors[c].append(val_loss)
     
-    # Compute average validation error for each h
     #avg_validation_errors = {k: np.mean(knn_validation_errors[k]) for k in k_values}
     avg_knn_errors = {k: np.mean(knn_validation_errors[k]) for k in k_values}
     avg_lr_errors = {c: np.mean(lr_validation_errors[c]) for c in C_values}
     
-    # Select the best model (with lowest validation error)
     best_k = min(avg_knn_errors, key=avg_knn_errors.get)
     best_c = min(avg_lr_errors, key=avg_lr_errors.get)
 
     print(f"Best k in this outer fold {i}: {best_k}")
     print(f"Best C in this outer fold {i}: {best_c}")
 
-    # # Train the best model on the entire outer training set
     # best_model = KNeighborsClassifier(best_k)
     # best_model.fit(X_outer_train, y_outer_train)
     
-    # Train the best KNN model on the entire outer training set
     best_knn_model = KNeighborsClassifier(best_k)
     best_knn_model.fit(X_outer_train, y_outer_train)
 
-    # Train the best Logistic Regression model on the entire outer training set
     best_lr_model = LogisticRegression(C=best_c, max_iter=1000)
     best_lr_model.fit(X_outer_train, y_outer_train)
     knn_test_predictions = best_knn_model.predict(X_outer_test)
-    knn_test_accuracy = accuracy_score(y_outer_test, knn_test_predictions) # number of correctly classified out of n predictions
-    knn_test_loss = 1 - knn_test_accuracy # number of incorrectly classified out of n predictions
+    knn_test_accuracy = accuracy_score(y_outer_test, knn_test_predictions)
+    knn_test_loss = 1 - knn_test_accuracy
     print(f"KNN Test loss in this outer fold {i}: {knn_test_loss}")
 
-    # Evaluate the best Logistic Regression model on the outer test set
     lr_test_predictions = best_lr_model.predict(X_outer_test)
     lr_test_accuracy = accuracy_score(y_outer_test, lr_test_predictions)
     lr_test_loss = 1 - lr_test_accuracy
     print(f"Logistic Regression Test loss in this outer fold {i}: {lr_test_loss}")
     print(f"Test loss in this outer fold {i}: {val_loss}")
     
-    ## Store the results for the table
     results_table.append([i, best_k, best_c, knn_test_loss,lr_test_loss, baseline_loss])
 
     ## Data collection for statistics 
@@ -181,14 +155,10 @@ for i, (outer_train_idx, outer_test_idx) in enumerate(outer_kfold.split(X), 1): 
 
     n_predictions = len(y_outer_test)
 
-    # KNN correct, Logistic Regression wrong
     kn_correct_lr_wrong = np.sum(kn_model_correct & ~lr_model_correct)
-    # KNN wrong, Logistic Regression correct
     kn_wrong_lr_correct = np.sum(~kn_model_correct & lr_model_correct)
 
-    # KNN correct, Baseline wrong
     kn_correct_base_wrong = np.sum(kn_model_correct & ~base_model_correct)
-    # KNN wrong, Baseline correct
     kn_wrong_base_correct = np.sum(~kn_model_correct & base_model_correct)
 
     # Logistic Regression correct, Baseline wrong
@@ -227,8 +197,26 @@ print(results_df)
 
 stats_kn_lr_df = pd.DataFrame(stats_calculations_kn_lr, columns = ["outer_fold","lower","upper","estimated diff","pvalue"] )
 print(stats_kn_lr_df)
-# Optionally save the results to a CSV file
+
+# Saving our results to a csv file for later use
 results_df.to_csv('results_table_classification.csv', index=False)
 
-# Do statistics 
+
+
+##### Matt Working on Exercise 5 #####
+## Best lambda value is 1 or 10
+
+class_names = ['Uncommon', 'Common', 'Rare', 'Mythic']
+
+model = LogisticRegression(C=10, max_iter=1000)
+model.fit(X_outer_train, y_outer_train)
+
+feature_names = ['power', 'toughness', 'price']
+coefficients = model.coef_
+
+coef_df = pd.DataFrame(coefficients, columns=feature_names)
+coef_df['Class'] = [class_names[i] for i in range(len(coefficients))]
+
+print("Coefficients per class:")
+print(coef_df)
 
