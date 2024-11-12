@@ -232,5 +232,21 @@ stats_total = [["kn_lr",kn_lr_pvalue,kn_lr_estimated_diff,kn_lr_CI_lower,kn_lr_C
 stats_total_df = pd.DataFrame(stats_total,columns=["Comparisons", "P-value","Estimated diff","CI lower", "CI upper"])
 stats_total_df.to_csv('stats_results_classification.csv',index=False)
 
+# Logistically regression model training
+
+class_names = ['Uncommon', 'Common', 'Rare', 'Mythic']
+
+model = LogisticRegression(C=10, max_iter=1000)
+model.fit(X_outer_train, y_outer_train)
+
+feature_names = ['power', 'toughness', 'price']
+coefficients = model.coef_
+
+coef_df = pd.DataFrame(coefficients, columns=feature_names)
+coef_df['Class'] = [class_names[i] for i in range(len(coefficients))]
+
+print("Coefficients per class:")
+print(coef_df)
+
 
 
