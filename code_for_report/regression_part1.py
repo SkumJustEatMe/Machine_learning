@@ -22,10 +22,6 @@ y = df_standardized[class_name].to_numpy(dtype=np.float32).ravel()
 N = np.shape(X)[0] ## Number of observations
 M = np.shape(X)[1] ## Number of attributes
 
-#######################################################
-# REGRESSION ANALYSIS 
-#######################################################
-
 # Fit ordinary least squares regression model
 model = lm.LinearRegression()
 model.fit(X,y)
@@ -88,19 +84,20 @@ for train_index, test_index in CV.split(X,y):
     Error_train_nofeatures[k] = np.square(y_train-y_train.mean()).sum(axis=0)/y_train.shape[0]
     Error_test_nofeatures[k] = np.square(y_test-y_test.mean()).sum(axis=0)/y_test.shape[0]
 
-    # Estimate weights for the optimal value of lambda on whole training set
+    # Estimate weights for the optimal lambda on whole training set
     lambdaI = opt_lambda * np.eye(M)
     lambdaI[0,0] = 0
     w_rlr[:,k] = np.linalg.solve(XtX+lambdaI,Xty).squeeze()
     
-    # Estimate weights for unregularized linear regression, on entire training set
+    # Estimate weights for unregularized linear regression on whole training set
     w_noreg[:,k] = np.linalg.solve(XtX,Xty).squeeze()
+    
     # Do linear regression with sklearn.linear_model package
     m = lm.LinearRegression().fit(X_train, y_train)
     Error_train[k] = np.square(y_train-m.predict(X_train)).sum()/y_train.shape[0]
     Error_test[k] = np.square(y_test-m.predict(X_test)).sum()/y_test.shape[0]
 
-    # Display the results for last cross-validation fold
+    # Get results for last cross-validation fold
     if k == K-1:
         figure(k, figsize=(12,8))
         subplot(1,2,1)
