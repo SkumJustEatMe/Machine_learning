@@ -1,10 +1,11 @@
-from PCA import df
-
 import numpy as np
 from sklearn import model_selection
 from dtuimldmtools import rlr_validate
 from matplotlib.pylab import figure, plot, subplot, hist, xlabel, ylabel, legend, show, semilogx, grid, title, loglog
 import sklearn.linear_model as lm 
+
+# Get the dataframe (i.e. our dataset)
+from data_prep import df
 
 # Standardize data
 df_standardized = (df - df.mean()) / df.std()
@@ -83,27 +84,27 @@ for train_index, test_index in CV.split(X,y):
     Xty = X_train.T @ y_train
     XtX = X_train.T @ X_train
     
-    # Compute mean squared error without using the input data at all (baseline)
+    # Compute mean squared error without using any input data (baseline)
     Error_train_nofeatures[k] = np.square(y_train-y_train.mean()).sum(axis=0)/y_train.shape[0]
     Error_test_nofeatures[k] = np.square(y_test-y_test.mean()).sum(axis=0)/y_test.shape[0]
 
-    # Estimate weights for the optimal value of lambda, on entire training set
+    # Estimate weights for the optimal value of lambda on whole training set
     lambdaI = opt_lambda * np.eye(M)
     lambdaI[0,0] = 0
     w_rlr[:,k] = np.linalg.solve(XtX+lambdaI,Xty).squeeze()
     
     # Estimate weights for unregularized linear regression, on entire training set
     w_noreg[:,k] = np.linalg.solve(XtX,Xty).squeeze()
-    # Use sklearn.linear_model module for linear regression:
+    # Do linear regression with sklearn.linear_model package
     m = lm.LinearRegression().fit(X_train, y_train)
     Error_train[k] = np.square(y_train-m.predict(X_train)).sum()/y_train.shape[0]
     Error_test[k] = np.square(y_test-m.predict(X_test)).sum()/y_test.shape[0]
 
-    # Display the results for the last cross-validation fold
+    # Display the results for last cross-validation fold
     if k == K-1:
         figure(k, figsize=(12,8))
         subplot(1,2,1)
-        semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-') # Don't plot the bias term
+        semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-')
         xlabel('Regularization factor')
         ylabel('Mean Coefficient Values')
         grid()
@@ -119,7 +120,7 @@ for train_index, test_index in CV.split(X,y):
 
 show()
 
-# Display results
+# Show results + visualize
 print('Linear regression without feature selection:')
 print('- Training error: {0}'.format(Error_train.mean()))
 print('- Test error:     {0}'.format(Error_test.mean()))
