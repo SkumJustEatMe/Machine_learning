@@ -1,4 +1,4 @@
-from PCA import df
+from data_prep import df
 
 import numpy as np
 from sklearn import model_selection
