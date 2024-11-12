@@ -1,10 +1,11 @@
-from data_prep import df
-
 import numpy as np
 from sklearn import model_selection
 from dtuimldmtools import rlr_validate
 from matplotlib.pylab import figure, plot, subplot, hist, xlabel, ylabel, legend, show, semilogx, grid, title, loglog
 import sklearn.linear_model as lm 
+
+# Get the dataframe (i.e. our dataset)
+from data_prep import df
 
 # Standardize data
 df_standardized = (df - df.mean()) / df.std()
